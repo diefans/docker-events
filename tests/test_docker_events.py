@@ -5,9 +5,9 @@ import pytest
 def FooEvent():
     """Just to have a clean singleton list."""
 
-    from docker_events import DockerEvent
+    from docker_events import event
 
-    class FooEvent(DockerEvent):
+    class FooEvent(event):
         events = []
 
     return FooEvent

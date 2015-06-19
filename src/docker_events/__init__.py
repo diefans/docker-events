@@ -1,7 +1,11 @@
 import docker
+import logging
 
 
-class DockerEvent(object):
+LOG = logging.getLogger(__package__)
+
+
+class event(object):
 
     """A decorator, which registers a filter function to select a specific set
     of callbacks upon receiving the event."""
@@ -23,13 +27,15 @@ class DockerEvent(object):
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.__name__)
+
     @classmethod
     def _add_event(cls, event):
         cls.events.append(event)
 
     def extend(self, func):
         """Creates a new Event."""
-        print "event", func
 
         return self.__class__(func, *self.filters)
 
@@ -65,19 +71,31 @@ class DockerEvent(object):
                 yield cb
 
 
-@DockerEvent
-def docker_pull(event_data):
+@event
+def pull(event_data):
     return event_data.get('status') == 'pull'
 
 
-@docker_pull.extend
-def docker_pull_arango(event_data):
-    return event_data.get('id').startswith("arango/")
+@event
+def start(event_data):
+    return event_data.get('status') == 'start'
 
 
-def loop():
-    client = docker.Client()
+@event
+def create(event_data):
+    return event_data.get('status') == 'create'
 
-    for event_data in client.events():
-        print event_data
 
+@event
+def die(event_data):
+    return event_data.get('status') == 'die'
+
+
+@event
+def stop(event_data):
+    return event_data.get('status') == 'stop'
+
+
+@event
+def destroy(event_data):
+    return event_data.get('status') == 'destroy'
