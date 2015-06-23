@@ -65,9 +65,11 @@ setup(
     },
 
     install_requires=[
-        'requests',
         'docker-py',
+        'requests>2.1.0',
         'click',
+        'python-etcd',
+        'simplejson'
     ],
 
     cmdclass={'test': PyTest},

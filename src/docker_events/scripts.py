@@ -7,7 +7,8 @@ import logging.config
 
 import docker
 import yaml
-import ujson
+
+import simplejson as json
 
 import gevent
 import gevent.monkey as gMonKey
@@ -56,14 +57,14 @@ def loop(config):
     # listen for further events
     for raw_data in client.events():
 
-        event_data = ujson.loads(raw_data)
+        event_data = json.loads(raw_data)
 
         LOG.debug("incomming event: %s", event_data)
 
         callbacks = event.filter_callbacks(event_data)
 
         # spawn all callbacks
-        gevent.joinall([gevent.spawn(cb, event_data, config) for cb in callbacks])
+        gevent.joinall([gevent.spawn(cb, client, event_data, config) for cb in callbacks])
 
 
 def join_configs(configs):
