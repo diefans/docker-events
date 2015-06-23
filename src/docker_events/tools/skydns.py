@@ -18,10 +18,10 @@ def set_skydns_record(client, docker_event, config):
     container_name = container['Name'].strip("/")
     container_ip = container['NetworkSettings']['IPAddress']
 
-    skydns_config = config.get('skydns', {})
-    skydns_containers = config.get('skydns.containers', {
+    skydns_config = config.get('skydns', {
         'domain': 'docker.local'
     })
+    skydns_containers = config.get('skydns.containers', {})
 
     # find domain name for this container
     if skydns_config and container_name in skydns_containers:
