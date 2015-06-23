@@ -36,6 +36,6 @@ def set_skydns_record(client, docker_event, config):
 
     domain_path = '/'.join(reversed(domain.split('.')))
 
-    etcd_client.write('/skydns/{}/{}'.format(domain_path), json.dumps({
+    etcd_client.write('/skydns/{}'.format(domain_path), json.dumps({
         'host': container_ip
     }))
