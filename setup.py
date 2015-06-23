@@ -71,6 +71,7 @@ setup(
         'python-etcd',
         'simplejson',
         'gevent',
+        'pyyaml',
     ],
 
     cmdclass={'test': PyTest},
