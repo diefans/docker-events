@@ -28,7 +28,7 @@ def setup_logging(logging_config, debug=False):
         logging.basicConfig(level=debug and logging.DEBUG or logging.ERROR)
 
 
-def loop(config):
+def loop(sock, config=None):
 
     """Loops over all docker events and executes subscribed callbacks with an
     optional config value.
@@ -36,7 +36,10 @@ def loop(config):
     :param config: a dictionary with external config values
     """
 
-    client = docker.Client()
+    if config is None:
+        config = {}
+
+    client = docker.Client(base_url=sock)
 
     # fake a running event for all running containers
     for container in client.containers():
@@ -102,7 +105,7 @@ def summarize_events():
 
 @click.command()
 @click.option("--sock", "-s",
-              default=None,
+              default="unix://var/run/docker.sock",
               help="the docker socket")
 @click.option("configs", "--config", "-c",
               multiple=True,
@@ -136,4 +139,4 @@ def cli(sock, configs, modules, files, log, debug):
 
     LOG.debug("args: %s", locals())
 
-    loop(config)
+    loop(sock=sock, config=config)
