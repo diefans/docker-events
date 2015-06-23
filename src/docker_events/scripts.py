@@ -37,6 +37,23 @@ def loop(config):
 
     client = docker.Client()
 
+    # fake a running event for all running containers
+    for container in client.containers():
+        event_data = {
+            'status': "running",
+            'id': container['Id'],
+            'from': container['Image'],
+            'time': container['Created'],
+        }
+
+        LOG.debug("incomming event: %s", event_data)
+
+        callbacks = event.filter_callbacks(event_data)
+
+        # spawn all callbacks
+        gevent.joinall([gevent.spawn(cb, event_data, config) for cb in callbacks])
+
+    # listen for further events
     for raw_data in client.events():
 
         event_data = ujson.loads(raw_data)
@@ -46,7 +63,7 @@ def loop(config):
         callbacks = event.filter_callbacks(event_data)
 
         # spawn all callbacks
-        gevent.joinall([gevent.spawn(cb, event_data, config.get(cb.__name__)) for cb in callbacks])
+        gevent.joinall([gevent.spawn(cb, event_data, config) for cb in callbacks])
 
 
 def join_configs(configs):
@@ -67,7 +84,7 @@ def load_modules(modules):
             __import__(dotted_module)
 
         except ImportError as e:
-            LOG.error("%s", e)
+            LOG.error("Unable to import %s: %s", dotted_module, e)
 
 
 def load_files(files):
