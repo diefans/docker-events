@@ -26,15 +26,16 @@ def set_skydns_record(client, docker_event, config):
     # find domain name for this container
     if skydns_config and container_name in skydns_containers:
         # use template
-        domain = skydns_containers[container_name].get('domain').format(**skydns_config)
+        sub_domain = skydns_containers[container_name].get('domain').format(**skydns_config)
 
     else:
         # join container_name with domain
-        domain = '.'.join((container_name, skydns_config.get('domain')))
+        sub_domain = container_name
+
+    domain = '.'.join((sub_domain.strip('.'), skydns_config.get('domain').strip('.')))
 
     domain_path = '/'.join(reversed(domain.split('.')))
 
-
-    etcd_client.write('/skydns/local/skydns/{}'.format(domain_path), json.dumps({
+    etcd_client.write('/skydns/{}/{}'.format(domain_path), json.dumps({
         'host': container_ip
     }))
