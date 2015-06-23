@@ -49,7 +49,7 @@ def test_filter_chaining(FooEvent):
 @pytest.fixture
 def foo_event(FooEvent):
     @FooEvent
-    def foo(event_data):
+    def foo(client, event_data):
         return event_data > 0
 
     return foo
@@ -58,7 +58,7 @@ def foo_event(FooEvent):
 @pytest.fixture
 def bar_event(foo_event):
     @foo_event.extend
-    def bar(event_data):
+    def bar(client, event_data):
         return event_data % 2 == 0
 
     return bar
@@ -69,7 +69,7 @@ def bar_event(foo_event):
     (1, True),
 ])
 def test_matches_foo(data, match, foo_event):
-    assert foo_event.matches(data) == match
+    assert foo_event.matches(None, data) == match
 
 
 @pytest.mark.parametrize("data, match", [
@@ -79,13 +79,13 @@ def test_matches_foo(data, match, foo_event):
 
 ])
 def test_matches_bar(data, match, bar_event):
-    assert bar_event.matches(data) == match
+    assert bar_event.matches(None, data) == match
 
 
 def test_filter(FooEvent, foo_event, bar_event):
-    assert list(FooEvent.filter_events(0)) == []
-    assert list(FooEvent.filter_events(1)) == [foo_event]
-    assert list(FooEvent.filter_events(2)) == [foo_event, bar_event]
+    assert list(FooEvent.filter_events(None, 0)) == []
+    assert list(FooEvent.filter_events(None, 1)) == [foo_event]
+    assert list(FooEvent.filter_events(None, 2)) == [foo_event, bar_event]
 
 
 @pytest.mark.parametrize("data, foo_t, bar_t", [
@@ -102,17 +102,17 @@ def test_callbacks(data, foo_t, bar_t, FooEvent, foo_event, bar_event):
     }
 
     @foo_event.subscribe
-    def foo(event_data):
+    def foo(client, event_data):
         c['foo'] += 1
         assert event_data > 0
 
     @bar_event.subscribe
-    def bar(event_data):
+    def bar(client, event_data):
         c['bar'] += 1
         assert event_data % 2 == 0
 
-    for cb in FooEvent.filter_callbacks(data):
-        cb(data)
+    for cb in FooEvent.filter_callbacks(None, data):
+        cb(None, data)
 
     assert c['foo'] == foo_t
     assert c['bar'] == bar_t

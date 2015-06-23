@@ -1,3 +1,8 @@
+import gevent
+import gevent.monkey as gMonKey
+
+gMonKey.patch_all()
+
 import click
 import inspect
 from itertools import imap
@@ -10,12 +15,10 @@ import yaml
 
 import simplejson as json
 
-import gevent
-import gevent.monkey as gMonKey
+from . import event
 
-gMonKey.patch_all()
 
-from . import event, LOG
+LOG = logging.getLogger(__name__)
 
 
 def setup_logging(logging_config, debug=False):
@@ -52,7 +55,7 @@ def loop(sock, config=None):
 
         LOG.debug("incomming event: %s", event_data)
 
-        callbacks = event.filter_callbacks(event_data)
+        callbacks = event.filter_callbacks(client, event_data)
 
         # spawn all callbacks
         gevent.joinall([gevent.spawn(cb, event_data, config) for cb in callbacks])
@@ -64,7 +67,7 @@ def loop(sock, config=None):
 
         LOG.debug("incomming event: %s", event_data)
 
-        callbacks = event.filter_callbacks(event_data)
+        callbacks = event.filter_callbacks(client, event_data)
 
         # spawn all callbacks
         gevent.joinall([gevent.spawn(cb, client, event_data, config) for cb in callbacks])

@@ -1,10 +1,3 @@
-import docker
-import logging
-
-
-LOG = logging.getLogger(__package__)
-
-
 class event(object):
 
     """A decorator, which registers a filter function to select a specific set
@@ -44,58 +37,58 @@ class event(object):
 
         self.callbacks.append(func)
 
-    def matches(self, event_data):
+    def matches(self, client, event_data):
         """True if all filters are matching."""
 
         for f in self.filters:
-            if not f(event_data):
+            if not f(client, event_data):
                 return False
 
         return True
 
     @classmethod
-    def filter_events(cls, event_data):
+    def filter_events(cls, client, event_data):
         """Filter registered events and yield them."""
 
         for event in cls.events:
             # try event filters
-            if event.matches(event_data):
+            if event.matches(client, event_data):
                 yield event
 
     @classmethod
-    def filter_callbacks(cls, event_data):
+    def filter_callbacks(cls, client, event_data):
         """Filter registered events and yield all of their callbacks."""
 
-        for event in cls.filter_events(event_data):
+        for event in cls.filter_events(client, event_data):
             for cb in event.callbacks:
                 yield cb
 
 
 @event
-def pull(event_data):
+def pull(client, event_data):
     return event_data.get('status') == 'pull'
 
 
 @event
-def start(event_data):
+def start(client, event_data):
     return event_data.get('status') == 'start'
 
 
 @event
-def create(event_data):
+def create(client, event_data):
     return event_data.get('status') == 'create'
 
 
 @event
-def die(event_data):
+def die(client, event_data):
     return event_data.get('status') == 'die'
 
 
 @event
-def stop(event_data):
+def stop(client, event_data):
     return event_data.get('status') == 'stop'
 
 
 @event
-def destroy(event_data):
+def destroy(client, event_data):
     return event_data.get('status') == 'destroy'
