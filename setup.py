@@ -69,7 +69,8 @@ setup(
         'requests>2.1.0',
         'click',
         'python-etcd',
-        'simplejson'
+        'simplejson',
+        'gevent',
     ],
 
     cmdclass={'test': PyTest},
