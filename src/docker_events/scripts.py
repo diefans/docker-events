@@ -1,18 +1,19 @@
+"""The CLI to start listen on docker events."""
+
 import gevent
 import gevent.monkey as gMonKey
 
 gMonKey.patch_all()
 
-import click
+# pylama: ignore=E402
 import inspect
 from itertools import imap
-
 import logging
 import logging.config
 
+import click
 import docker
 import yaml
-
 import simplejson as json
 
 from . import event
@@ -86,6 +87,8 @@ def join_configs(configs):
 
 
 def load_modules(modules):
+    """Load a module."""
+
     for dotted_module in modules:
         try:
             __import__(dotted_module)
@@ -95,12 +98,16 @@ def load_modules(modules):
 
 
 def load_files(files):
+    """Load and execute a python file."""
+
     for py_file in files:
         LOG.debug("exec %s", py_file)
         execfile(py_file, globals(), locals())
 
 
 def summarize_events():
+    """Some information about active events and callbacks."""
+
     for ev in event.events:
         if ev.callbacks:
             LOG.info("subscribed to %s by %s", ev, ', '.join(imap(repr, ev.callbacks)))
@@ -127,6 +134,8 @@ def summarize_events():
 @click.option("--debug", is_flag=True,
               help="enable debug log level")
 def cli(sock, configs, modules, files, log, debug):
+    """The CLI."""
+
     setup_logging(log, debug)
 
     config = join_configs(configs)
@@ -140,6 +149,6 @@ def cli(sock, configs, modules, files, log, debug):
     # summarize active events and callbacks
     summarize_events()
 
-    LOG.debug("args: %s", locals())
-
-    loop(sock=sock, config=config)
+    gloop = gevent.Greenlet.spawn(loop, sock=sock, config=config)
+    gloop.start()
+    gloop.join()
